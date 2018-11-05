@@ -10,7 +10,8 @@ class Translator {
     private val notes = mutableListOf<Note>()
     private val onEvents = mutableListOf<NoteOn>()
     private val offEvents = mutableListOf<NoteOff>()
-    private val minFigureDuration = 1 / 16f
+    private val notePrecision = 16.toFloat()
+    private val minFigureDuration = 1 / notePrecision
     private var denominator = 1
     private var resolution = 0
 
@@ -33,13 +34,6 @@ class Translator {
 
         for (event in onEvents) {
             addNoteFromEvent(event)
-        }
-
-        for (note in notes.sortedBy { it.startingPosiotion }) {
-            val extended = if (note.isExtended) "*" else ""
-            val linked = if (note.isLinked) "linked" else ""
-            println("${note.height}${pitchToString(note.pitch)}\t\t${note.startingPosiotion}\t${note.duration}" +
-                    "$extended\t$linked")
         }
 
         return notes.toTypedArray()
@@ -78,8 +72,8 @@ class Translator {
                 val isLinked = remainingDuration > minFigureDuration
                 notes.add(Note(pitch, octave, transformToFigureDuration(duration), startingPosition, true,
                         isLinked))
-                if (isLinked) addNote(pitch,octave,
-                        (startingPosition + (containingDuration * denominator)* 1.5f),
+                if (isLinked) addNote(pitch, octave,
+                        (startingPosition + (containingDuration * denominator) * 1.5f),
                         remainingDuration)
             }
             else -> {
@@ -103,11 +97,12 @@ class Translator {
     }
 
     private fun calcNoteDuration(onNote: NoteOn): Float {
-        val offNote = offEvents.first { it.noteValue == onNote.noteValue }
-        val nextEvent = onEvents.firstOrNull { it.tick > offNote.tick }
-        val extraDuration = nextEvent?.delta ?: 0
-        offEvents.remove(offNote)
-        return ((offNote.tick - onNote.tick + extraDuration) / resolution.toFloat()) / denominator
+        val offNote = offEvents.first {
+            it.noteValue == onNote.noteValue
+                    && it.tick >= onNote.tick
+                    && it.channel == onNote.channel
+        }
+        return Math.ceil((((offNote.tick - onNote.tick) / resolution.toFloat()) / denominator) * notePrecision.toDouble()).toFloat() / notePrecision
     }
 
     private fun pitchToString(pitch: Int) = when (pitch) {

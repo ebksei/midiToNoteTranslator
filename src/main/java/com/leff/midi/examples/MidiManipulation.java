@@ -14,8 +14,8 @@ public class MidiManipulation {
     public static void main(String[] args) {
         MidiFile mf = null;
         String pathname = "/Users/alejandro.platero/Downloads/";
-        //pathname+="twinkle_twinkle.mid";
-        pathname+="happy_birthday.mid";
+        pathname+="twinkle_twinkle.mid";
+        //pathname+="happy_birthday.mid";
         File input = new File(pathname);
 
         try {
@@ -25,9 +25,7 @@ public class MidiManipulation {
             e.printStackTrace();
             return;
         }
-        MidiTrack T;
 
-        System.out.println(mf.getResolution());
         Translator translator = new Translator();
         translator.translateMidiFile(mf);
     }
